@@ -1,8 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-using HmPro.Scripting.Files;
-using HmPro.Scripting.Functions.Edit;
+using HmPro.Files;
+using HmPro.Registry;
 
 namespace HmPro.Windows
 {
@@ -10,7 +10,7 @@ namespace HmPro.Windows
     {
         private void mamObjectTree_ItemSelected(object sender, RoutedEventArgs e) //Pulls up the information about a meme in from the selected object in the mamObjectTree.
         {
-            if (!Scripting.Ins.IsLoaded)
+            if (!Ins.IsLoaded)
             {
                 CloseAllEditors();
                 Lock();
@@ -26,10 +26,11 @@ namespace HmPro.Windows
             TreeViewItem Selected = (TreeViewItem)mamObjectTree.SelectedItem;
             string Header = (string)Selected.Header;
 
-            Session File = new Session();
-            Obj Obj = File.GetObject(Lyseria.Fix.FixToName(Header), Memes: true, Collections: false, MasterCollections: false);
+            Session File = new Session(Ins.CurrentLoaded);
+            IComponent[] Objs = File.GetMeme(Header);
+            IComponent Obj = Objs.Length == 0 ? null : Objs[0];
 
-            if (Obj == null || !Obj || (Obj.Type != ComponentTypes.Meme))
+            if (Obj == null || Obj.IsEmpty || (Obj.ObjectType != ComponentTypes.Meme))
             {
                 MessageBox.Show("There was an internal error.\nThe selected item was not Collection or Master Collection, the only allowed literals.\nPress OK and the list will be refreshed.", "Hmmm Pro:", MessageBoxButton.OK, MessageBoxImage.Warning);
 
@@ -43,7 +44,7 @@ namespace HmPro.Windows
             Meme Meme = (Meme)Obj;
             mamObjTitle.Text = Meme.Title;
             mamObjType.Text = "Meme";
-            mamType.Text = Meme.ObjType == MemeTypes.Attachment ? "Attachment" : Meme.ObjType == MemeTypes.Script ? "Script" : "Standard";
+            mamType.Text = Meme.Type == MemeTypes.Attachment ? "Attachment" : Meme.Type == MemeTypes.Script ? "Script" : "Standard";
             mamCreator.Text = Meme.Creator;
             mamDescription.Text = Meme.Description;
         }
@@ -54,7 +55,7 @@ namespace HmPro.Windows
         }
         private void mamEditCurrent_Click(object sender, RoutedEventArgs e) //Loads the basic editor on the selected object.
         {
-            if (!Scripting.Ins.IsLoaded)
+            if (!Ins.IsLoaded)
             {
                 CloseAllEditors();
                 Lock();
@@ -70,10 +71,10 @@ namespace HmPro.Windows
             TreeViewItem Selected = (TreeViewItem)mamObjectTree.SelectedItem;
             string Header = (string)Selected.Header;
 
-            Session File = new Session();
-            Obj Obj = File.GetObject(Lyseria.Fix.FixToName(Header), Memes: true, Collections: false, MasterCollections: false);
+            Session File = new Session(Ins.CurrentLoaded);
+            Meme[] Obj = File.GetMeme(Header);
 
-            if (Obj == null || !Obj || (Obj.Type != ComponentTypes.Meme))
+            if (Obj == null || Obj[0].IsEmpty || (Obj[0].ObjectType != ComponentTypes.Meme))
             {
                 MessageBox.Show("There was an internal error.\nThe selected item was not Collection or Master Collection, the only allowed literals.\nPress OK and the list will be refreshed.", "Hmmm Pro:", MessageBoxButton.OK, MessageBoxImage.Warning);
 
@@ -84,7 +85,7 @@ namespace HmPro.Windows
                 return;
             }
 
-            baeExecute(Obj.ToType());
+            baeExecute(Obj[0]);
         }
     }
 }

@@ -1,17 +1,19 @@
 ﻿using System.Reflection;
+using System.Resources;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Hmmm Pro 2019.1")]
-[assembly: AssemblyDescription("A meme organization software for people with way to much time for memes.")]
+[assembly: AssemblyTitle("Hmmm Pro 2020.1")]
+[assembly: AssemblyDescription("A program for organizing your memes.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Lyseria Technologies")]
-[assembly: AssemblyProduct("Hmmm Pro 2019.1")]
-[assembly: AssemblyCopyright("© Lyseria Technologies 2019. All Rights Reseved.")]
-[assembly: AssemblyTrademark("Lyseria Technologies 2019")]
+[assembly: AssemblyCompany("Phosphor Technologies")]
+[assembly: AssemblyProduct("Hmmm Pro 2020.1")]
+[assembly: AssemblyCopyright("Copyright Phosphor Technologies ©  2020")]
+[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -49,5 +51,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2019.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("2020.1.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]

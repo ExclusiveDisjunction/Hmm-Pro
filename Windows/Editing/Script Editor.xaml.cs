@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 
-using HmPro.Scripting.Files;
+using HmPro.Files;
 
 namespace HmPro.Windows.Editing
 {
@@ -14,7 +14,7 @@ namespace HmPro.Windows.Editing
 
         private void Window_Loaded(object sender, RoutedEventArgs e) //Sets up the window and then Draws it.
         {
-            Scripting.Ins.OpenWindows.Add(this);
+            Ins.OpenWindows.Add(this);
 
             MemeTitle.Content = Obj.Title;
             ScriptIndex = 0;
@@ -23,7 +23,7 @@ namespace HmPro.Windows.Editing
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)  //Removes the window from Ins.OpenWindows registry.
         {
-            Scripting.Ins.OpenWindows.Remove(this);
+           Ins.OpenWindows.Remove(this);
         }
 
         public bool AppendAction() //Saves the currently edited script.
@@ -59,7 +59,7 @@ namespace HmPro.Windows.Editing
         private void Save_Click(object sender, RoutedEventArgs e) //Saves the file.
         {
             if (AppendAction() == false) return;
-            Obj.OwnerFile.Save();
+            Obj.ParentFile.Save();
         }
 
         private void MoveNext_Click(object sender, RoutedEventArgs e) //Moves to the next script and then draws.
@@ -155,7 +155,7 @@ namespace HmPro.Windows.Editing
         }
         public void Execute(Meme Source) //Loads the window using a source meme.
         {
-            if (Source.ObjType != MemeTypes.Script)
+            if (Source.Type != MemeTypes.Script)
                 throw new InvalidOperationException("The Meme 'Source' was was not the expected type of 'MemeTypes.Script'.");
 
             this.Obj = Source;

@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-using HmPro.Scripting.Files;
-using HmPro.Scripting.Events;
+using HmPro.Files;
+using HmPro.Events;
+using HmPro.Edit;
+using System.Linq;
 
 namespace HmPro.Windows.Editing
 {
@@ -13,146 +16,33 @@ namespace HmPro.Windows.Editing
     /// </summary>
     public partial class ObjectSelector : Window
     {
-        public ObjectSelector()
+        private ObjectSelector()
         {
             InitializeComponent();
         }
 
-        private event EventHandler<ConnectEventArgs> Connected; //The event raised when the user returns a response.
-        private bool Waiting = true; //Used in event waiting, it makes the scripts wait for a response from the form. Used in while(bool) loops.
-        private Component Selected; //The selected item from the tree.        
+        private event EventHandler<ObjectSelectionArgs> Connected; //The event raised when the user returns a response.
+        private IComponent Selected; //The selected item from the tree.        
         private string Notes = null;
+        private bool MultipleInstance = false;
 
-        private bool MastersOnly = false;
-        private bool MemesOnly = false;
-
-        private bool Scripts = false; //Determies if the startup should show scripts.
         private bool Collections = true; //Sets it that collections are visible.
         private bool MasterCollections = true; //Sets it that mastercollections are visible.
         private bool Memes = false; //Determines if statup should show memes.
+        private bool Bins = true;
+
+        private List<string> TitleMaster = new List<string>();
 
         private void Window_Loaded(object sender, RoutedEventArgs e) //Runs on startup.
         {
-            Scripting.Ins.OpenWindows.Add(this);
-            if (MastersOnly || MemesOnly)
-            {
-                VisualTree.Items.Remove(FavMemes);
-                VisualTree.Items.Remove(LegMemes);
-            }
+            Ins.OpenWindows.Add(this);
 
-            Session Session = new Session();
-            SolidColorBrush White = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-            
-            if (MemesOnly)
-            {
-                foreach (Meme Meme in Session.Memes)
-                {
-                    TreeViewItem item = new TreeViewItem
-                    {
-                        Header = Meme.Title,
-                        Foreground = White
-                    };
-                    VisualTree.Items.Add(item);
-                }
-            }
-
-            else
-            {
-                if (!MastersOnly)
-                {
-                    foreach (Collection collection in Session.Collections)
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = collection.Title,
-                            Foreground = White
-                        };
-                        VisualTree.Items.Add(item);
-
-                        if (Memes)
-                        {
-                            foreach (Meme meme in collection.Memes)
-                            {
-                                TreeViewItem Meme = new TreeViewItem()
-                                {
-                                    Header = meme.Title,
-                                    Foreground = White
-                                };
-                                item.Items.Add(Meme);
-
-                                if (Scripts)
-                                {
-                                    int Index = 1;
-                                    foreach (Script script in meme.Scripts)
-                                    {
-                                        TreeViewItem Script = new TreeViewItem()
-                                        {
-                                            Header = $"Script {Index}",
-                                            Foreground = White
-                                        };
-                                        Meme.Items.Add(Script);
-                                        Index++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                foreach (MasterCollection collection in Session.MasterCollections)
-                {
-                    TreeViewItem item = new TreeViewItem()
-                    {
-                        Header = collection.Title,
-                        Foreground = White
-                    };
-                    VisualTree.Items.Add(item);
-
-                    if (!MastersOnly)
-                    {
-                        foreach (Collection sCollection in collection.Collections)
-                        {
-                            TreeViewItem Collection = new TreeViewItem()
-                            {
-                                Header = sCollection.Title,
-                                Foreground = White
-                            };
-                            item.Items.Add(Collection);
-                        }
-                    }
-
-                    if (Memes)
-                    {
-                        foreach (Meme meme in collection.Memes)
-                        {
-                            TreeViewItem Meme = new TreeViewItem()
-                            {
-                                Header = meme.Title,
-                                Foreground = White
-                            };
-                            item.Items.Add(Meme);
-
-                            if (Scripts)
-                            {
-                                int Index = 1;
-                                foreach (Script script in meme.Scripts)
-                                {
-                                    TreeViewItem Script = new TreeViewItem()
-                                    {
-                                        Header = $"Script {Index}",
-                                        Foreground = White
-                                    };
-                                    Meme.Items.Add(Script);
-                                    Index++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            TreeViewItem Item = SessionBridge.GetObjects(Ins.CurrentLoaded, MasterCollections, Bins, Memes, Collections, true);
+            VisualTree.Items.Add(Item);
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Scripting.Ins.OpenWindows.Remove(this);
+            Ins.OpenWindows.Remove(this);
         }
 
         private void VisualTree_Selected(object sender, RoutedEventArgs e) //Sets the information on the form using the selected item from the tree.
@@ -160,128 +50,116 @@ namespace HmPro.Windows.Editing
             if (!(VisualTree.SelectedItem != null && VisualTree.SelectedItem is TreeViewItem item && item.Header is string))
             {
                 ObjTitle.Text = "";
-                ObjType.Text = "";
+                Type.Text = "";
                 this.Selected = null;
                 this.Notes = "";
+                MultipleInstance = false;
             }
 
             TreeViewItem selected = (TreeViewItem)VisualTree.SelectedItem;
 
-            string Name = Lyseria.Fix.FixToName((string)selected.Header);
+            string Name = (string)selected.Header;
 
-            if (Name == "Legendary_Memes" || Name == "Favorite_Memes")
+            if (Name == Ins.LoadedSession.Title)
             {
-                ObjTitle.Text = Name.Replace('_', ' ');
-                ObjType.Text = "No Type";
+                ObjTitle.Text = Name;
+                Type.Text = Ins.LoadedSession is Session ? "Session File" : Ins.LoadedSession is Segment ? "Segment File" : "Unreconized Project";
+
                 this.Selected = null;
-                this.Notes = Name;
+                this.Notes = null;
+                MultipleInstance = false;
+                return;
+            }
+
+            if (Name == "Legendary Memes" || Name == "Favorite Memes" || Name == "Memes" || Name == "Collections" || Name == "Bins" || Name == "Memes")
+            {
+                ObjTitle.Text = Name;
+                Type.Text = "Group Header";
+                this.Selected = null;
+                this.Notes = Name == "Legendary Memes" || Name == "Favorite Memes " ? Name : null;
+
+                MultipleInstance = false;
+                return;
             }
             else
             {
-                Session Session = new Session();
-                Obj NewSelected = Session.GetObject(Name, Memes, Collections, MasterCollections);
+                Session Session = new Session(Ins.CurrentLoaded);
+                IComponent[] NewSelectedList = Session.GetObject(Name, Memes, Collections, MasterCollections);
 
-                if (NewSelected == null)
+                if (NewSelectedList is null || NewSelectedList.Contains(null)) 
                 {
-                    MessageBox.Show("The selected item does not exist in the session. (Was it removed?)", "Retrive Object:", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ObjTitle.Text = "No Object Selected";
+                    Type.Text = "No Type";
+                    this.Selected = null;
+                    this.Notes = null;
+
+                    MultipleInstance = false;
                     return;
                 }
 
-                switch (NewSelected.Type)
-                {
-                    case ComponentTypes.Collection | ComponentTypes.MasterCollection:
-                    {
-                        ObjType.Text = "Collection";
-                        break;
-                    }
-                    case ComponentTypes.Meme:
-                    {
-                        ObjType.Text = "Meme";
-                        break;
-                    }
-                    case ComponentTypes.Script:
-                    {
-                        ObjType.Text = "Script";
-                        break;
-                    }
-                }
-
-                if (NewSelected.Type != ComponentTypes.Script)
-                {
-                    ObjTitle.Text = NewSelected.Title;
-                }
+                string TypeString;                
+                if (NewSelectedList.Length == 1)
+                    TypeString = $"{NewSelectedList[0].ObjectType}";
                 else
-                {
-                    ObjTitle.Text = "Script: No Title";
-                }
+                    TypeString = "Duplicate Items, Multiple Types.";
 
-                this.Selected = NewSelected.ToType();
+                if (NewSelectedList.Length > 1)
+                    MultipleInstance = true;
+                else
+                    MultipleInstance = false;
+
+                IComponent NewSelected = NewSelectedList[0];
+
+                Type.Text = TypeString;
+                ObjTitle.Text = NewSelected.Title;
+
+                this.Selected = NewSelected;
                 this.Notes = null;
             }
         }
 
         private void Connect_Click(object Sender, RoutedEventArgs e) //Throws the Selected event with the selected object. and sets Waiting = false;
         {
-            Waiting = false;
-            ConnectEventArgs E = new ConnectEventArgs(Selected, true, new Session(), Notes);
+            if (MultipleInstance)
+                Selected = DuplicateSelector.Execute(Selected.Title);
+
+            ObjectSelectionArgs E = new ObjectSelectionArgs(Selected, true, new Session(Ins.CurrentLoaded), Notes);
             this.Connected?.Invoke(this, E);
+
+            this.Close();
         }
         private void CancelJob_Click(object sender, RoutedEventArgs e) //Throws the Selected event with a null object and sets Waiting = false;
         {
-            Waiting = false;
-            ConnectEventArgs E = new ConnectEventArgs(null, false, null);
+            ObjectSelectionArgs E = new ObjectSelectionArgs(null, false, null);
             this.Connected?.Invoke(this, E);
+
+            this.Close();
         }
 
         /// <summary>
-        /// Used to run the entire form, and returns the user's response. It is assumed that only collections will be showed.
+        /// Used to run the entire form, and returns the user's response.
         /// </summary>
         /// <returns>The eventargs of the button's click.</returns>
-        public ConnectEventArgs Execute() //Use this to run the form.
+        public static ObjectSelectionArgs Execute(bool Memes = false, bool Collections=true, bool MasterCollections = true, bool Bins = true)
         {
-            this.Show();
-
-            ConnectEventArgs Retun = null;
-
-            Connected += (s, e) =>
+            ObjectSelector This = new ObjectSelector
             {
-                Retun = e;
+                Collections = Collections,
+                MasterCollections = MasterCollections,
+                Memes = Memes,
+                Bins = Bins
             };
 
-            while (Waiting)
+            ObjectSelectionArgs Return = null;
+
+            This.Connected += (s, e) =>
             {
-                System.Windows.Forms.Application.DoEvents();
-            }
-
-            this.Close();
-            return Retun;
-        }
-        public ConnectEventArgs Execute(bool Memes = false, bool Collections=true, bool MasterCollections=true, bool Scripts = false)
-        {
-            this.MastersOnly = Memes == false && Collections == false && MasterCollections == true;            
-            this.MemesOnly = Memes == true && Collections == false && MasterCollections == false;
-
-            this.Collections = Collections;
-            this.MasterCollections = MasterCollections;
-            this.Memes = Memes;
-            this.Scripts = Scripts;
-
-            this.Show();
-
-            ConnectEventArgs Retun = null;
-
-            Connected += (s, e) =>
-            {
-                Retun = e;
+                Return = e;
             };
 
-            while (Waiting)
-            {
-                System.Windows.Forms.Application.DoEvents();
-            }
+            This.ShowDialog();
 
-            this.Close();
-            return Retun;
+            return Return;
         }
     }
 }

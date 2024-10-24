@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Windows;
 
-using HmPro.Scripting.Files;
+using HmPro.Files;
 
 namespace HmPro.Windows
 {
     public partial class Main
     {
-        internal Component baeObj = null;
+        internal IComponent baeObj = null;
  
-        public void baeExecute(Component Obj) //Loads the basic editor, and implements an object for editing.
+        public void baeExecute(IComponent Obj) //Loads the basic editor, and implements an object for editing.
         {
-            if (Obj is Obj)
-                throw new NotSupportedException("The component cannot be obj");
             baeObj = Obj;
 
             baeTitle.Text = Obj.Title;
@@ -22,7 +20,7 @@ namespace HmPro.Windows
             baeDescriptionH.Content = "Description:";
             baeCreatorH.Content = "Creator:";
 
-            switch (Obj.Type)
+            switch (Obj.ObjectType)
             {
                 case ComponentTypes.Meme: //Meme types are not allowed to be edited in this version (Comming in 2020.1). Everything else is enabled.
                 {
@@ -30,7 +28,7 @@ namespace HmPro.Windows
                     baeTitle.IsEnabled = true;
 
                     baeType.IsEnabled = false;
-                    baeType.Text = Meme.ObjType == MemeTypes.Attachment ? "Attachment Meme" : Meme.ObjType == MemeTypes.Script ? "Script Meme" : "Standard Meme";
+                    baeType.Text = Meme.Type == MemeTypes.Attachment ? "Attachment Meme" : Meme.Type == MemeTypes.Script ? "Script Meme" : "Standard Meme";
 
                     baeCreator.IsEnabled = true;
                     baeCreator.Text = Meme.Creator;
@@ -39,37 +37,21 @@ namespace HmPro.Windows
                     baeDescription.Text = Meme.Description;
                     break;
                 }
-                case ComponentTypes.Collection: //Collection (Standard) are allowed to have their type modified, but they do not have Creators or Descriptions in this release (Comming in 2020.1). 
+                case ComponentTypes.Collection: //Collection (Standard) are allowed to have their type modified. 
                 {
                     Collection Collection = (Collection)Obj;
                     baeTitle.IsEnabled = true;
 
                     baeType.IsEnabled = true;
-                    baeType.Text = Collection.ObjType == CollectionTypes.Favorite ? "Favorite Collection" : Collection.ObjType == CollectionTypes.Legendary ? "Legendary Collection" : "Standard Collection";
+                    baeType.Text = Collection.Type == CollectionTypes.Favorite ? "Favorite Collection" : Collection.Type == CollectionTypes.Legendary ? "Legendary Collection" : Collection.Type == CollectionTypes.Master ? "Master Collection" : "Standard Collection";
 
-                    baeCreator.IsEnabled = false;
-                    baeCreator.Text = "";
-                    baeCreatorH.Content = "*Not Used*";
+                    baeCreator.IsEnabled = true;
+                    baeCreator.Text = Collection.Creator;
+                    baeCreatorH.Content = "Creator";
 
-                    baeDescription.IsEnabled = false;
-                    baeDescription.Text = "";
-                    baeDescriptionH.Content = "*Not Used*";
-                    break;
-                }
-                case ComponentTypes.MasterCollection: //Master collections cannot change their type. They can only change thier title. (Conversion is comming in 2020.1)
-                {
-                    baeTitle.IsEnabled = true;
-
-                    baeType.IsEnabled = false;
-                    baeType.Text = "Master Collection";
-
-                    baeCreator.IsEnabled = false;
-                    baeCreator.Text = "";
-                    baeCreatorH.Content = "*Not Used*";
-
-                    baeDescription.IsEnabled = false;
-                    baeDescription.Text = "";
-                    baeDescriptionH.Content = "*Not Used*";
+                    baeDescription.IsEnabled = true;
+                    baeDescription.Text = Collection.Description;
+                    baeDescriptionH.Content = "Description";
                     break;
                 }
                 case ComponentTypes.Script: //This can edit all three properties, in a specific order. baeTitleH is turned to 'Person', baeTypeH is turned into 'Position', and baeDescription turns to 'Text'.

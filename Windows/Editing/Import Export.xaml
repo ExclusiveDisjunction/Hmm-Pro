@@ -5,11 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HmPro.Windows.Editing"
         mc:Ignorable="d"
-        Title="Import/Export" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing">
+        Title="Import/Export" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" FontFamily="Candara">
     <Window.Resources>
         <Style TargetType="{x:Type TabItem}">
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontSize" Value="20"/>
             <Setter Property="BorderBrush">
                 <Setter.Value>
                     <SolidColorBrush Color="{DynamicResource Grey1}"/>
@@ -68,6 +68,7 @@
         <Style TargetType="{x:Type Button}">
             <Setter Property="BorderBrush" Value="{x:Null}"/>
             <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
 
             <Setter Property="Template">
                 <Setter.Value>
@@ -142,18 +143,15 @@
                     <Grid.Background>
                         <SolidColorBrush Color="{DynamicResource Background1}"/>
                     </Grid.Background>
-                    <Label Content="Import From:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Foreground="White" Height="30" Width="96"/>
-                    <Label x:Name="imPath" Height="27" Margin="111,10,0,0" Content="C:\" VerticalAlignment="Top" Background="{x:Null}" Foreground="White" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="608">
-                        <Label.BorderBrush>
-                            <SolidColorBrush Color="{DynamicResource Accent3}"/>
-                        </Label.BorderBrush>
-                    </Label>
+                    <Label Content="Import From:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Foreground="White" Height="30" Width="128.442" FontSize="16"/>
+                    <TextBlock x:Name="imPath" Height="27" Margin="143.442,10,0,0" Text="C:\" VerticalAlignment="Top" Background="{x:Null}" Foreground="White" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="575.558" FontSize="16" TextTrimming="CharacterEllipsis"/>
+
                     <Button Content="..." HorizontalAlignment="Left" Margin="331,13,0,0" VerticalAlignment="Top" Width="24" Height="24" Grid.Column="1" Click="imChooseFile_Click"/>
 
-                    <RadioButton x:Name="imAll" Content="All Objects" IsChecked="True" Margin="10,155,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left" Width="90"/>
-                    <RadioButton x:Name="imMemes" Content="All Memes" IsChecked="False" Margin="10,179,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left" Width="88"/>
-                    <RadioButton x:Name="imCollections" Content="All Collections" IsChecked="False" Margin="10,203,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left" Width="113"/>
-                    <RadioButton x:Name="imCollectionsEXMeme" Content="All Collections without Memes" IsChecked="False" Margin="10,227,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left" Width="220"/>
+                    <RadioButton x:Name="imAll" Content="All Objects" IsChecked="True" Margin="10,155,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left"/>
+                    <RadioButton x:Name="imMemes" Content="All Memes" IsChecked="False" Margin="10,179,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left"/>
+                    <RadioButton x:Name="imCollections" Content="All Collections" IsChecked="False" Margin="10,203,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left"/>
+                    <RadioButton x:Name="imCollectionsEXMeme" Content="All Collections without Memes" IsChecked="False" Margin="10,227,0,0" VerticalAlignment="Top" Foreground="White" Height="19" HorizontalAlignment="Left"/>
 
                     <TreeView x:Name="Objects" Margin="10,42,10,10" Grid.Column="1" Foreground="White">
                         <TreeView.BorderBrush>

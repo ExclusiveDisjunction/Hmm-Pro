@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HmPro.Windows.Docs"
         mc:Ignorable="d"
-        Title="Documentation" Height="450" Width="800" Closing="Window_Closing" Loaded="Window_Loaded" FontFamily="Century Gothic">
+        Title="Documentation" Height="450" Width="800" Closing="Window_Closing" Loaded="Window_Loaded" FontFamily="SimSun">
     <Grid>
         <Grid.Background>
             <SolidColorBrush Color="{DynamicResource Grey1}"/>
@@ -51,7 +51,7 @@
                 </TreeViewItem>
             </TreeViewItem>
         </TreeView>
-        <TextBlock x:Name="itTitle" Margin="233,10,10,377" TextWrapping="Wrap" Text="No Article Selected" Foreground="White" FontFamily="Century Gothic" FontSize="25"/>
-        <TextBox x:Name="itText" FontFamily="Century Gothic" Margin="233,47,10,10" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" AllowDrop="False" Focusable="False" IsTabStop="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
+        <TextBlock x:Name="itTitle" Margin="233,10,10,377" TextWrapping="Wrap" Text="No Article Selected" Foreground="White" FontFamily="SimSun" FontSize="25"/>
+        <TextBox x:Name="itText" FontFamily="SimSun" Margin="233,47,10,10" TextWrapping="Wrap" AcceptsReturn="True" AcceptsTab="True" AllowDrop="False" Focusable="False" IsTabStop="False" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>

@@ -1,9 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Collections.Generic;
 
-using HmPro.Scripting;
-using HmPro.Scripting.Files;
-using HmPro.Scripting.Functions.Edit;
+using HmPro.Files;
+using HmPro.Registry;
+using Phosphor;
+using HmPro.Edit;
 
 namespace HmPro.Windows
 {
@@ -22,16 +24,6 @@ namespace HmPro.Windows
         }
         public void CloseEditor(Actions Action) //Closes a single editor, resets it, and opens the last action. If the last action is Action1 or None, then it closes the action only.
         {
-            if (!Ins.IsLoaded)
-            {
-                Lock();
-                if (Ins.ShowWelcome)
-                {
-                    WelcomeGrid.Visibility = Visibility.Visible;
-                }
-                return;
-            }
-
             CurrentAction = Actions.None;            
 
             switch (Action)
@@ -338,10 +330,6 @@ namespace HmPro.Windows
             if (!Ins.IsLoaded)
             {
                 Lock();
-                if (Ins.ShowWelcome)
-                {
-                    WelcomeGrid.Visibility = Visibility.Visible;
-                }
                 return;
             }
 
@@ -382,51 +370,44 @@ namespace HmPro.Windows
                 {
                     CurrentFile.Visibility = Visibility.Visible;
 
-                    Session session = new Session();
+                    IHSession file = Ins.LoadedSession;
 
-                    FileTitle.Text = session.Title;
+                    FileTitle.Text = file.Title;
 
-                    FiMemesCount.Text = $"{session.Memes.Count}";
+                    FiMemesCount.Text = $"{file.CountOf(typeof(Meme))}";
 
-                    int ScriptCount = 0;
-                    int AttachmentCount = 0;
-                    int StandardMemeCount = 0;
-                    foreach (Meme meme in session.Memes)
+                    //Begin memes
+                    ICountable<MemeTypes> Memes = file;
+
+                    FiAttachmentCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Attachment))}";
+                    FiScriptCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Script))}";
+                    FiStandardMemeCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Standard))}";
+                    //End Memes
+
+                    //Begin Collections
+                    FiCollectionCount.Text = $"{file.CountOf(typeof(Collection))}";
+
+                    ICountable<CollectionTypes> Collections = file;
+
+                    FiMasterCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Master))}";
+                    FiFavoriteCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Favorite))}";
+                    FiLegendaryCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Legendary))}";
+                    FiStandardCollectionCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Standard))}";
+                    //End Collections
+
+                    FiBinsCount.Text = $"{file.CountOf(typeof(Bin))}";
+                    FiFilesCount.Text = $"{file.CountOf(typeof(Attachment))}";
+
+                    switch (file.Version)
                     {
-                        if (meme.ObjType == MemeTypes.Attachment)
-                        {
-                            AttachmentCount++;
-                            continue;
-                        }
-                        if (meme.ObjType == MemeTypes.Script)
-                        {
-                            ScriptCount++;
-                            continue;
-                        }
-                        if (meme.ObjType == MemeTypes.Standard)
-                        {
-                            StandardMemeCount++;
-                            continue;
-                        }
-                    }
-                    FiAttachmentCount.Text = $"{AttachmentCount}";
-                    FiScriptCount.Text = $"{ScriptCount}";
-                    FiStandardMemeCount.Text = $"{StandardMemeCount}";
-
-                    FiCollectionCount.Text = $"{session.Collections.Count + session.MasterCollections.Count}";
-
-                    FiMasterCount.Text = $"{session.MasterCollections.Count}";
-                    FiFavoriteCount.Text = $"{session.FavoriteCollectionsCount}";
-                    FiLegendaryCount.Text = $"{session.LegendaryCollectionsCount}";
-                    FiStandardCollectionCount.Text = $"{session.StandardCollectionsCount}";
-
-                    switch (session.Version)
-                    {
-                        case Lyseria.AppVersions.V_2019_1:
+                        case AppVersions.V_2019_1:
                             FiVersion.Text = "2019.1";
                             break;
-                        case Lyseria.AppVersions.V_2019_2:
+                        case AppVersions.V_2019_2:
                             FiVersion.Text = "2019.2";
+                            break;
+                        case AppVersions.V_2020_1:
+                            FiVersion.Text = "2020.1";
                             break;
                     }
                     FiLocation.Text = Ins.CurrentLoaded;
@@ -434,41 +415,10 @@ namespace HmPro.Windows
                 }
                 case Editors.ManageCollections:
                 {
-                    macObjectTree.Items.Clear();
-
                     ManageCollections.Visibility = Visibility.Visible;
 
-                    System.Windows.Media.SolidColorBrush White = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
-
-                    Session File = new Session();
-                    foreach (Collection Collection in File.Collections)
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Collection.Title,
-                            Foreground = White
-                        };
-                        macObjectTree.Items.Add(item);
-                    }
-
-                    foreach (MasterCollection Collection in File.MasterCollections)
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Collection.Title,
-                            Foreground = White
-                        };
-                        macObjectTree.Items.Add(item);
-                        foreach (Collection sub in Collection.Collections)
-                        {
-                            TreeViewItem Item = new TreeViewItem
-                            {
-                                Header = sub.Title,
-                                Foreground = White
-                            };
-                            item.Items.Add(Item);
-                        }
-                    }
+                    macObjectTree.Items.Clear();
+                    macObjectTree.Items.Add(SessionBridge.GetAllCollections(Ins.CurrentLoaded, false));
 
                     macObjTitle.Text = "*NoInfo*";
                     macObjType.Text = "*NoInfo*";
@@ -479,20 +429,9 @@ namespace HmPro.Windows
                 case Editors.ManageMemes:
                 {
                     ManageMemes.Visibility = Visibility.Visible;
-                    Session File = new Session();
 
-                    System.Windows.Media.SolidColorBrush White = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                     mamObjectTree.Items.Clear();
-
-                    foreach (Meme Meme in ((LooseMemesList)File).Sort())
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Meme.Title,
-                            Foreground = White
-                        };
-                        mamObjectTree.Items.Add(item);
-                    }
+                    mamObjectTree.Items.Add(SessionBridge.GetAllMemes(Ins.CurrentLoaded));
                     break;
                 }
                 case Editors.None:
@@ -520,14 +459,10 @@ namespace HmPro.Windows
             if (!Ins.IsLoaded)
             {
                 Lock();
-                if (Ins.ShowWelcome)
-                {
-                    WelcomeGrid.Visibility = Visibility.Visible;
-                }
                 return;
             }
 
-            if (!EditorReg.ActionRunning(EditorReg.AssociatedAction(Editor)))
+            if (!EditorReg.SpecEditorRuning(Editor))
             {
                 LoadEditor(Editor);
                 return;
@@ -587,51 +522,44 @@ namespace HmPro.Windows
                 {
                     CurrentFile.Visibility = Visibility.Visible;
 
-                    Session session = new Session();
+                    IHSession file = Ins.LoadedSession;
 
-                    FileTitle.Text = session.Title;
+                    FileTitle.Text = file.Title;
 
-                    FiMemesCount.Text = $"{session.Memes.Count}";
+                    FiMemesCount.Text = $"{file.CountOf(typeof(Meme))}";
 
-                    int ScriptCount = 0;
-                    int AttachmentCount = 0;
-                    int StandardMemeCount = 0;
-                    foreach (Meme meme in session.Memes)
+                    //Begin memes
+                    ICountable<MemeTypes> Memes = file;
+
+                    FiAttachmentCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Attachment))}";
+                    FiScriptCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Script))}";
+                    FiStandardMemeCount.Text = $"{(Memes is null ? 0 : Memes.CountOf(MemeTypes.Standard))}";
+                    //End Memes
+
+                    //Begin Collections
+                    FiCollectionCount.Text = $"{file.CountOf(typeof(Collection))}";
+
+                    ICountable<CollectionTypes> Collections = file;
+
+                    FiMasterCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Master))}";
+                    FiFavoriteCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Favorite))}";
+                    FiLegendaryCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Legendary))}";
+                    FiStandardCollectionCount.Text = $"{(Collections is null ? 0 : Collections.CountOf(CollectionTypes.Standard))}";
+                    //End Collections
+
+                    FiBinsCount.Text = $"{file.CountOf(typeof(Bin))}";
+                    FiFilesCount.Text = $"{file.CountOf(typeof(Attachment))}";
+
+                    switch (file.Version)
                     {
-                        if (meme.ObjType == MemeTypes.Attachment)
-                        {
-                            AttachmentCount++;
-                            continue;
-                        }
-                        if (meme.ObjType == MemeTypes.Script)
-                        {
-                            ScriptCount++;
-                            continue;
-                        }
-                        if (meme.ObjType == MemeTypes.Standard)
-                        {
-                            StandardMemeCount++;
-                            continue;
-                        }
-                    }
-                    FiAttachmentCount.Text = $"{AttachmentCount}";
-                    FiScriptCount.Text = $"{ScriptCount}";
-                    FiStandardMemeCount.Text = $"{StandardMemeCount}";
-
-                    FiCollectionCount.Text = $"{session.Collections.Count + session.MasterCollections.Count}";
-
-                    FiMasterCount.Text = $"{session.MasterCollections.Count}";
-                    FiFavoriteCount.Text = $"{session.FavoriteCollectionsCount}";
-                    FiLegendaryCount.Text = $"{session.LegendaryCollectionsCount}";
-                    FiStandardCollectionCount.Text = $"{session.StandardCollectionsCount}";
-
-                    switch (session.Version)
-                    {
-                        case Lyseria.AppVersions.V_2019_1:
+                        case AppVersions.V_2019_1:
                             FiVersion.Text = "2019.1";
                             break;
-                        case Lyseria.AppVersions.V_2019_2:
+                        case AppVersions.V_2019_2:
                             FiVersion.Text = "2019.2";
+                            break;
+                        case AppVersions.V_2020_1:
+                            FiVersion.Text = "2020.1";
                             break;
                     }
                     FiLocation.Text = Ins.CurrentLoaded;
@@ -639,41 +567,10 @@ namespace HmPro.Windows
                 }
                 case Editors.ManageCollections:
                 {
-                    macObjectTree.Items.Clear();
-
                     ManageCollections.Visibility = Visibility.Visible;
 
-                    System.Windows.Media.SolidColorBrush White = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
-
-                    Session File = new Session();
-                    foreach (Collection Collection in File.Collections)
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Collection.Title,
-                            Foreground = White
-                        };
-                        macObjectTree.Items.Add(item);
-                    }
-
-                    foreach (MasterCollection Collection in File.MasterCollections)
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Collection.Title,
-                            Foreground = White
-                        };
-                        macObjectTree.Items.Add(item);
-                        foreach (Collection sub in Collection.Collections)
-                        {
-                            TreeViewItem Item = new TreeViewItem
-                            {
-                                Header = sub.Title,
-                                Foreground = White
-                            };
-                            item.Items.Add(Item);
-                        }
-                    }
+                    macObjectTree.Items.Clear();
+                    macObjectTree.Items.Add(SessionBridge.GetAllCollections(Ins.CurrentLoaded, false));
 
                     macObjTitle.Text = "*NoInfo*";
                     macObjType.Text = "*NoInfo*";
@@ -684,20 +581,9 @@ namespace HmPro.Windows
                 case Editors.ManageMemes:
                 {
                     ManageMemes.Visibility = Visibility.Visible;
-                    Session File = new Session();
 
-                    System.Windows.Media.SolidColorBrush White = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
                     mamObjectTree.Items.Clear();
-
-                    foreach (Meme Meme in ((LooseMemesList)File).Sort())
-                    {
-                        TreeViewItem item = new TreeViewItem
-                        {
-                            Header = Meme.Title,
-                            Foreground = White
-                        };
-                        mamObjectTree.Items.Add(item);
-                    }
+                    mamObjectTree.Items.Add(SessionBridge.GetAllMemes(Ins.CurrentLoaded));
                     break;
                 }
                 case Editors.None:

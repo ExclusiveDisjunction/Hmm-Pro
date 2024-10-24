@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using static HmPro.Scripting.Ins;
 
 namespace HmPro.Windows
 {
@@ -12,29 +11,29 @@ namespace HmPro.Windows
     {
         private void setShowWelcome_Checked(object sender, RoutedEventArgs e) //Sets Ins.ShowWelcome to True.
         {
-            Scripting.Ins.ShowWelcome = true;
+            Ins.ShowWelcome = true;
         }
         private void setShowWelcome_Unchecked(object sender, RoutedEventArgs e) //Sets Ins.ShowWelcome to False.
         {
-            Scripting.Ins.ShowWelcome = false;
+            Ins.ShowWelcome = false;
         }
         
         private void setLoadLast_Checked(object sender, RoutedEventArgs e) //Sets Ins.LoadLast to True.
         {
-            LoadLast = true;
+            Ins.LoadLast = true;
         }
         private void setLoadLast_Unchecked(object sender, RoutedEventArgs e) //Sets Ins.LoadLast to False.
         {
-            LoadLast = false;
+            Ins.LoadLast = false;
         }
 
         private void setSaveMemeCreator_Checked(object sender, RoutedEventArgs e) //Sets Ins.SaveMemeCreator to True.
         {
-            SaveMemeCreator = true;
+            Ins.SaveMemeCreator = true;
         }
         private void setSaveMemeCreator_Unchecked(object sender, RoutedEventArgs e) //Sets Ins.SaveMemeCreator to False.
         {
-            SaveMemeCreator = false;
+            Ins.SaveMemeCreator = false;
         }
 
         //private void setTour_Click(object sender, RoutedEventArgs e) //Loads the tour feature. In this version, it is not used.
@@ -44,10 +43,7 @@ namespace HmPro.Windows
         //}
         private void setResetRecents_Click(object sender, RoutedEventArgs e) //Resets all recents in the program and then notifies the user.
         {
-            for (int i = 0; i < 20; i++)
-            {
-                SetRecent("");
-            }
+            Recent.DeleteAllRecents();
             MessageBox.Show("All recents have been reset. To see results, you have to restart Hmmm Pro.", "Settings:", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }

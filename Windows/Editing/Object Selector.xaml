@@ -77,14 +77,13 @@
             <TreeView.Background>
                 <SolidColorBrush Color="{DynamicResource Grey2}"/>
             </TreeView.Background>
-            <TreeViewItem x:Name="FavMemes" Header="Favorite Memes" Foreground="White"/>
-            <TreeViewItem x:Name="LegMemes" Header="Legendary Memes" Foreground="White"/>
         </TreeView>
 
         <TextBlock x:Name="ObjTitle" TextAlignment="Center" FontSize="22" Foreground="White" HorizontalAlignment="Left" Margin="10,43,0,0" TextWrapping="Wrap" Text="No Object Selected" VerticalAlignment="Top" Width="470" Height="36" Grid.Column="1"/>
-        <TextBlock x:Name="ObjType" TextAlignment="Center" FontSize="15" Foreground="White" FontStyle="Italic" HorizontalAlignment="Left" Margin="157,79,0,0" TextWrapping="Wrap" Text="No Type" VerticalAlignment="Top" Width="176" Height="25" Grid.Column="1"/>
-        
+        <TextBlock x:Name="Type" TextAlignment="Center" FontSize="15" Foreground="White" FontStyle="Italic" HorizontalAlignment="Left" Margin="106,79,0,0" TextWrapping="Wrap" Text="No Type" VerticalAlignment="Top" Width="276" Height="25" Grid.Column="1"/>
+
         <Button Content="Select Object" Click="Connect_Click" Grid.Column="1" HorizontalAlignment="Left" Margin="71,199,0,0" VerticalAlignment="Top" Width="167" Height="28"/>
         <Button Content="Cancel Job" Click="CancelJob_Click" Grid.Column="1" HorizontalAlignment="Left" Margin="243,199,0,0" VerticalAlignment="Top" Width="167" Height="28"/>
+        <TextBlock x:Name="Type_Copy" TextAlignment="Center" FontSize="15" Foreground="White" FontStyle="Italic" HorizontalAlignment="Left" Margin="10,363,0,0" TextWrapping="Wrap" Text="Notice: If the Type says 'Duplicate Items', another window will show up after you click 'Select Object' to select which duplicate you want." VerticalAlignment="Top" Width="470" Height="48" Grid.Column="1"/>
     </Grid>
 </Window>

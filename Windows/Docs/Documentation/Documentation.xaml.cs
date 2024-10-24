@@ -1,7 +1,5 @@
 ﻿using System.Windows;
 
-using HmPro.Scripting;
-
 namespace HmPro.Windows.Docs
 {
     /// <summary>

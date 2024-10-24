@@ -1,6 +1,5 @@
 ﻿using System.Windows;
-
-using HmPro.Scripting.Functions.Edit;
+using HmPro.Registry;
 
 namespace HmPro.Windows
 {
@@ -8,13 +7,8 @@ namespace HmPro.Windows
     {
         private void Action1_Click(object sender, RoutedEventArgs e) //Loads the editor in action 1.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -25,13 +19,8 @@ namespace HmPro.Windows
         }
         private void Action2_Click(object sender, RoutedEventArgs e) //Loads the editor in action 2.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -42,13 +31,8 @@ namespace HmPro.Windows
         }
         private void Action3_Click(object sender, RoutedEventArgs e) //Loads the editor in action 3.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -59,13 +43,8 @@ namespace HmPro.Windows
         }
         private void Action4_Click(object sender, RoutedEventArgs e) //Loads the editor in action 4.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -76,13 +55,8 @@ namespace HmPro.Windows
         }
         private void Action5_Click(object sender, RoutedEventArgs e) //Loads the editor in action 5.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -93,13 +67,8 @@ namespace HmPro.Windows
         }
         private void Action6_Click(object sender, RoutedEventArgs e) //Loads the editor in action 6.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
 
             HideAllEditors();
             ResetCloses();
@@ -110,14 +79,8 @@ namespace HmPro.Windows
         }
         private void Action7_Click(object sender, RoutedEventArgs e) //Loads the editor in action 7.
         {
-            if (!IsLoaded)
-            {
+            if (!Ins.IsLoaded)
                 Lock();
-                HideAllEditors();
-                ResetCloses();
-                ResetActions();
-            }
-
             HideAllEditors();
             ResetCloses();
             ShowEditor(EditorReg.Action7);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Controls;
 using System.Windows;
-using HmPro.Scripting;
 
 namespace HmPro.Windows
 {

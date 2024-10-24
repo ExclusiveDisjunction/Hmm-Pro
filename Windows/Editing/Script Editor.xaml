@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HmPro.Windows.Editing"
         mc:Ignorable="d"
-        Title="Script Editor" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing">
+        Title="Script Editor" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" FontFamily="Candara">
     <Window.Resources>
         <Style TargetType="{x:Type Button}">
             <Setter Property="Background" Value="{x:Null}"/>
             <Setter Property="BorderBrush" Value="{x:Null}"/>
             <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -72,16 +73,16 @@
         <Button x:Name="MoveBack" Click="MoveBack_Click" Content="&lt;-" Margin="0,389,5,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" Width="75"/>
         <Label x:Name="IndexDisp" Content="Item X of Y" Margin="295,358,297,0" VerticalAlignment="Top" FontStyle="Italic" Foreground="White" HorizontalContentAlignment="Center" Grid.ColumnSpan="2" Height="26"/>
 
-        <TextBox x:Name="ScriptPerson" Grid.Column="1" Height="23" Margin="85,87,40,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <Label Content="Person:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,84,0,0" VerticalAlignment="Top" Width="61"/>
+        <TextBox x:Name="ScriptPerson" Grid.Column="1" Height="23" Margin="85,87,40,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="14"/>
+        <Label Content="Person:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,84,0,0" VerticalAlignment="Top" Width="61" FontSize="14"/>
 
-        <TextBox x:Name="ScriptPosition" Grid.Column="1" Height="23" Margin="85,118,40,0" TextWrapping="Wrap" Text="Left" VerticalAlignment="Top"/>
-        <Label Content="Position:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,115,0,0" VerticalAlignment="Top" Width="61"/>
+        <TextBox x:Name="ScriptPosition" Grid.Column="1" Height="23" Margin="85,118,40,0" TextWrapping="Wrap" Text="Left" VerticalAlignment="Top" FontSize="14"/>
+        <Label Content="Position:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,115,0,0" VerticalAlignment="Top" Width="61" FontSize="14"/>
 
-        <TextBox x:Name="ScriptText" Grid.Column="1" Height="204" Margin="85,149,40,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
-        <Label Content="Text:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,146,0,0" VerticalAlignment="Top" Width="61"/>
+        <TextBox x:Name="ScriptText" Grid.Column="1" Height="204" Margin="85,149,40,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontSize="14"/>
+        <Label Content="Text:" Foreground="White" Grid.Column="1" HorizontalAlignment="Left" Margin="19,146,0,0" VerticalAlignment="Top" Width="61" FontSize="14"/>
 
-        <Label Content="Meme Title:" Foreground="White" HorizontalAlignment="Left" Margin="10,84,0,0" VerticalAlignment="Top" Width="73"/>
+        <Label Content="Meme Title:" Foreground="White" HorizontalAlignment="Left" Margin="10,84,0,0" VerticalAlignment="Top" Width="94.977" FontSize="15"/>
         <Label x:Name="MemeTitle" Content="" Foreground="White" HorizontalAlignment="Left" Margin="88,84,0,0" VerticalAlignment="Top" Width="278"/>
         <Button x:Name="Save" Click="Save_Click" Content="Save" Margin="0,146,277.667,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" Width="109"/>
         <Button x:Name="Cancel" Click="Cancel_Click" Content="Cancel" Margin="0,171,277.667,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" Width="109"/>

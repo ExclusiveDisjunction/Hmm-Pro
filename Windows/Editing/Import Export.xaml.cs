@@ -5,7 +5,9 @@ using System.Windows.Media;
 
 using System.Diagnostics.CodeAnalysis;
 
-using HmPro.Scripting.Files;
+using HmPro.Files;
+using Phosphor;
+using HmPro.Edit;
 
 namespace HmPro.Windows.Editing
 {
@@ -14,73 +16,46 @@ namespace HmPro.Windows.Editing
     /// </summary>
     public partial class ImportExport : Window
     {
-        public ImportExport()
+        private ImportExport()
         {
             InitializeComponent();
         }
 
         private ImportExportOpt DrawMode = ImportExportOpt.Import; //The mode that the user requested.
         [SuppressMessage("Code Quality", "IDE0052:Remove unread private members", Justification = "Not used in this version, archetecuture in place.")]
-        private Component Selected = null; //The object used in ImportExportOpt.ExportCurrent.
-        private Session SelectedSes = null; //The session loaded to Import/Export From/To.
+        private IHSession SelectedFile = null; //The session loaded to Import/Export From/To.
 
-        public void Execute() //Sets the ImportExportOpt to Import and shows the window.
+        public static void Execute() //Sets the ImportExportOpt to Import and shows the window.
         {
-            this.Show();
+            ImportExport This = new ImportExport();
+            This.ShowDialog();
         }
-        public void Execute(ImportExportOpt Option) //Used to set the specic ImportExportOpt.
+        public static void Execute(ImportExportOpt Option) //Used to set the specic ImportExportOpt.
         {
-            DrawMode = Option;
-            this.Show();
-        }
-        public void Execute(Component Obj) //Used to export an object. Not used in this version.
-        {
-            if (Obj == null || Obj.IsEmpty)
+            ImportExport This = new ImportExport
             {
-                throw new NotSupportedException("The Obj must have a literal value.");
-            }
-
-            DrawMode = ImportExportOpt.ExportCurrent;
-            Selected = Obj;
-            this.Show();
+                DrawMode = Option
+            };
+            This.Show();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e) //Draws the window from the selected index.
         {
-            Scripting.Ins.OpenWindows.Add(this);
+            Ins.OpenWindows.Add(this);
 
             switch (DrawMode)
             {
-                case ImportExportOpt.AllCollections:
-                {
-                    MainTab.SelectedIndex = 1;
-                    break;
-                }
-                case ImportExportOpt.AllMemes:
-                {
-                    MainTab.SelectedIndex = 1;
-                    break;
-                }
                 case ImportExportOpt.Export:
-                {
                     MainTab.SelectedIndex = 1;
                     break;
-                }
-                case ImportExportOpt.ExportCurrent:
-                {
-                    MainTab.SelectedIndex = 1;
-                    break;
-                }
                 case ImportExportOpt.Import:
-                {
                     MainTab.SelectedIndex = 0;
                     break;
-                }
             }
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) //Removes the window from Ins.OpenWindows registry.
         {
-            Scripting.Ins.OpenWindows.Remove(this);
+            Ins.OpenWindows.Remove(this);
         }
 
         #region ImportCmds
@@ -90,362 +65,375 @@ namespace HmPro.Windows.Editing
             {
                 AddExtension = true,
                 DefaultExt = ".teh",
-                Filter = "Session Files | *.teh",
+                Filter = "Session Files|*.teh|Segment Files|*.tehseg",
                 Multiselect = false,
                 Title = "Select a file"
             };
             open.ShowDialog();
             string path = open.FileName;
             if (path == "")
-            {
                 return;
-            }
 
-            Session File;
-            try
-            {
+            IHSession File;
+            if (FileTools.FileExt(path, false) == "teh")
                 File = new Session(path);
-            }
-            catch
-            {
-                MessageBox.Show("This file cannot be loaded, as it is not the correct session file type. Please try again later.", "File Select:", MessageBoxButton.OK, MessageBoxImage.Error);
+            else if (FileTools.FileExt(path, false) == "tehseg")
+                File = new Segment(path);
+            else
                 return;
-            }
 
-            SelectedSes = File;
+            SelectedFile = File;
 
-            imPath.Content = path;
+            imPath.Text = path;
             Objects.Items.Clear();
 
-            SolidColorBrush White = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-
-            TreeViewItem FMemesHeader = new TreeViewItem
-            {
-                Header = "Favorite Memes",
-                Foreground = White
-            };
-            Objects.Items.Add(FMemesHeader);
-            TreeViewItem LMemesHeader = new TreeViewItem
-            {
-                Header = "Legendary Memes",
-                Foreground = White
-            };
-            Objects.Items.Add(LMemesHeader);
-
-            foreach (Collection Collection in File.Collections.Sort())
-            {
-                TreeViewItem item = new TreeViewItem
-                {
-                    Header = Collection.Title,
-                    Foreground = White
-                };
-                Objects.Items.Add(item);
-                foreach (Meme Meme in Collection.Memes.Sort())
-                {
-                    TreeViewItem meme = new TreeViewItem
-                    {
-                        Header = Meme.Title,
-                        Foreground = White
-                    };
-                    item.Items.Add(meme);
-                }
-            }
-            foreach (MasterCollection Collection in File.MasterCollections.Sort())
-            {
-                TreeViewItem item = new TreeViewItem
-                {
-                    Header = Collection.Title,
-                    Foreground = White
-                };
-                Objects.Items.Add(item);
-                foreach (Collection collection in Collection.Collections.Sort())
-                {
-                    TreeViewItem coll = new TreeViewItem
-                    {
-                        Header = collection.Title,
-                        Foreground = White
-                    };
-                    item.Items.Add(coll);
-                }
-                foreach (Meme Meme in Collection.Memes.Sort())
-                {
-                    TreeViewItem meme = new TreeViewItem
-                    {
-                        Header = Meme.Title,
-                        Foreground = White
-                    };
-                    item.Items.Add(meme);
-                }
-            }
-            foreach (Meme Meme in File.FavoriteMemes.Sort())
-            {
-                TreeViewItem meme = new TreeViewItem
-                {
-                    Header = Meme.Title,
-                    Foreground = White
-                };
-                FMemesHeader.Items.Add(meme);
-            }
-            foreach (Meme Meme in File.LegendaryMemes.Sort())
-            {
-                TreeViewItem meme = new TreeViewItem
-                {
-                    Header = Meme.Title,
-                    Foreground = White
-                };
-                LMemesHeader.Items.Add(meme);
-            }
+            Objects.Items.Add(SessionBridge.GetAllObjects(path));
         }
 
+        private enum imMode { AllObjects, AllMemes, AllCollections, AllCollectionsWoMemes }
         private void imStart_Click(object sender, RoutedEventArgs e) //Starts importing items from the selected session and the setting mode.
         {
-            Session debFile;
-            try
-            {
-                debFile = new Session((string)imPath.Content);
-            }
-            catch
-            {
-                MessageBox.Show("This file cannot be loaded, as it is not the correct session file type. Please try again later.", "File Select:", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            SelectedSes = debFile;
+            imMode Mode;
+            if (imAll.IsChecked == true) Mode = imMode.AllObjects;
+            else if (imMemes.IsChecked == true) Mode = imMode.AllMemes;
+            else if (imCollections.IsChecked == true) Mode = imMode.AllCollections;
+            else if (imCollectionsEXMeme.IsChecked == true) Mode = imMode.AllCollectionsWoMemes;
+            else return;
 
-            if (imAll.IsChecked == true)
+            switch (Mode)
             {
-                Session File = new Session();
-
-                foreach (Collection Collection in SelectedSes.Collections)
+                case imMode.AllObjects:
                 {
-                    Collection New = File.Collections.Add(Collection.ObjType);
-                    New.Title = Collection.Title;
-                    foreach (Meme Meme in Collection.Memes)
+                    if (Ins.LoadedSession is Segment && SelectedFile is Segment)
                     {
-                        Meme NewMeme = New.Memes.Add(Meme.ObjType);
-                        NewMeme.Title = Meme.Title;
-                        NewMeme.Creator = Meme.Creator;
-                        NewMeme.Description = Meme.Description;
-                        if (Meme.ObjType == MemeTypes.Attachment)
+                        Segment Current = Ins.LoadedSession as Segment;
+                        Segment Other = SelectedFile as Segment;
+
+                        foreach (Collection item in Other.Collections)
                         {
-                            NewMeme.Attachments = Meme.Attachments;
+
                         }
-                        else if (Meme.ObjType == MemeTypes.Script)
+                        foreach (Meme item in Other.Memes)
                         {
-                            foreach (Script Script in Meme.Scripts)
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                        foreach (Attachment item in Other.Files)
+                        {
+
+                        }
+                        foreach (Script item in Other.Scripts)
+                        {
+
+                        }
+                    }
+                    else if (Ins.LoadedSession is Session && SelectedFile is Session)
+                    {
+                        Session Current = Ins.LoadedSession as Session;
+                        Session Other = SelectedFile as Session;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Meme item in Other.FavoriteMemes)
+                        {
+
+                        }
+                        foreach (Meme item in Other.LegendaryMemes)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                        foreach (Attachment item in Other.Files)
+                        {
+
+                        }
+                    }
+
+                    else if (Ins.LoadedSession is Session && SelectedFile is Segment)
+                    {
+                        Session Current = Ins.LoadedSession as Session;
+                        Segment Other = SelectedFile as Segment;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                        foreach (Attachment item in Other.Files)
+                        {
+
+                        }
+                    }
+                    else if (Ins.LoadedSession is Segment && SelectedFile is Session)
+                    {
+                        Segment Current = Ins.LoadedSession as Segment;
+                        Session Other = SelectedFile as Session;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Meme item in Other.FavoriteMemes)
+                        {
+
+                        }
+                        foreach (Meme item in Other.LegendaryMemes)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                        foreach (Attachment item in Other.Files)
+                        {
+
+                        }
+                    }                    
+                    break;
+                }
+                case imMode.AllMemes:
+                {
+                    if (Ins.LoadedSession is Segment && SelectedFile is Segment)
+                    {
+                        Segment Current = Ins.LoadedSession as Segment;
+                        Segment Other = SelectedFile as Segment;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Meme item in Other.Memes)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                    }
+                    else if (Ins.LoadedSession is Session && SelectedFile is Session)
+                    {
+                        Session Current = Ins.LoadedSession as Session;
+                        Session Other = SelectedFile as Session;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Meme item in Other.FavoriteMemes)
+                        {
+
+                        }
+                        foreach (Meme item in Other.LegendaryMemes)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                    }
+
+                    else if (Ins.LoadedSession is Session && SelectedFile is Segment)
+                    {
+                        Session Current = Ins.LoadedSession as Session;
+                        Segment Other = SelectedFile as Segment;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                    }
+                    else if (Ins.LoadedSession is Segment && SelectedFile is Session)
+                    {
+                        Segment Current = Ins.LoadedSession as Segment;
+                        Session Other = SelectedFile as Session;
+
+                        foreach (Collection item in Other.Collections)
+                        {
+
+                        }
+                        foreach (Meme item in Other.FavoriteMemes)
+                        {
+                            Meme NewM = Current.Memes.Add(item.Type);
+                            NewM.Title = item.Title;
+                            NewM.Creator = item.Creator;
+                            NewM.Description = item.Description;
+
+                            if (item.Type == MemeTypes.Script)
                             {
-                                Script NewScript = Meme.Scripts.Add();
-                                NewScript.Person = Script.Person;
-                                NewScript.Position = Script.Position;
-                                NewScript.Text = Script.Text;
+                                foreach (Script Script in item.Scripts)
+                                {
+                                    Script NewS = NewM.Scripts.Add();
+                                    NewS.Person = Script.Person;
+                                    NewS.Position = Script.Position;
+                                    NewS.Text = Script.Text;
+                                }
+                            }
+                            else if (item.Type == MemeTypes.Attachment)
+                            {
+                                foreach (Attachment Attach in item.Files)
+                                {
+                                    Attachment NewF = NewM.Files.Add();
+                                    NewF.Path = Attach.Path;
+                                }
+                            }
+                        }
+                        foreach (Meme item in Other.LegendaryMemes)
+                        {
+                            Meme NewM = Current.Memes.Add(item.Type);
+                            NewM.Title = item.Title;
+                            NewM.Creator = item.Creator;
+                            NewM.Description = item.Description;
+
+                            if (item.Type == MemeTypes.Script)
+                            {
+                                foreach (Script Script in item.Scripts)
+                                {
+                                    Script NewS = NewM.Scripts.Add();
+                                    NewS.Person = Script.Person;
+                                    NewS.Position = Script.Position;
+                                    NewS.Text = Script.Text;
+                                }
+                            }
+                            else if (item.Type == MemeTypes.Attachment)
+                            {
+                                foreach (Attachment Attach in item.Files)
+                                {
+                                    Attachment NewF = NewM.Files.Add();
+                                    NewF.Path = Attach.Path;
+                                }
+                            }
+                        }
+                        foreach (Bin item in Other.Bins)
+                        {
+
+                        }
+                    }
+                    break;
+                }
+                case imMode.AllCollections:
+                {
+                    IHSession Current = Ins.LoadedSession as Segment;
+                    IHSession Other = SelectedFile as Segment;
+
+                    foreach (Collection item in Other.Collections)
+                    {
+                        Collection New = Current.Collections.Add(item.Type);
+                        New.Title = item.Title;
+                        New.Creator = item.Creator;
+                        New.Description = item.Description;
+
+                        if (item.Type == CollectionTypes.Master)
+                        {
+                            foreach (Collection sub in item.Collections)
+                            {
+                                Collection thing = New.Collections.Add(sub.Type);
+                                thing.Title = sub.Title;
+                                thing.Creator = sub.Creator;
+                                thing.Description = sub.Description;
+
+                                foreach (Meme meme in item.Memes)
+                                {
+                                    Meme NewM = New.Memes.Add(meme.Type);
+                                    NewM.Title = meme.Title;
+                                    NewM.Creator = meme.Creator;
+                                    NewM.Description = meme.Description;
+
+                                    if (meme.Type == MemeTypes.Script)
+                                    {
+                                        foreach (Script Script in meme.Scripts)
+                                        {
+                                            Script NewS = NewM.Scripts.Add();
+                                            NewS.Person = Script.Person;
+                                            NewS.Position = Script.Position;
+                                            NewS.Text = Script.Text;
+                                        }
+                                    }
+                                    else if (meme.Type == MemeTypes.Attachment)
+                                    {
+                                        foreach (Attachment Attach in meme.Files)
+                                        {
+                                            Attachment NewF = NewM.Files.Add();
+                                            NewF.Path = Attach.Path;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach (Meme meme in item.Memes)
+                        {
+                            Meme NewM = New.Memes.Add(meme.Type);
+                            NewM.Title = meme.Title;
+                            NewM.Creator = meme.Creator;
+                            NewM.Description = meme.Description;
+
+                            if (meme.Type == MemeTypes.Script)
+                            {
+                                foreach (Script Script in meme.Scripts)
+                                {
+                                    Script NewS = NewM.Scripts.Add();
+                                    NewS.Person = Script.Person;
+                                    NewS.Position = Script.Position;
+                                    NewS.Text = Script.Text;
+                                }
+                            }
+                            else if (meme.Type == MemeTypes.Attachment)
+                            {
+                                foreach (Attachment Attach in meme.Files)
+                                {
+                                    Attachment NewF = NewM.Files.Add();
+                                    NewF.Path = Attach.Path;
+                                }
                             }
                         }
                     }
+                    break;
                 }
-                foreach (MasterCollection Collection in SelectedSes.MasterCollections)
+                case imMode.AllCollectionsWoMemes:
                 {
-                    MasterCollection New = File.MasterCollections.Add();
-                    New.Title = Collection.Title;
-                    foreach (Collection Sub in Collection.Collections)
+                    IHSession Current = Ins.LoadedSession as Segment;
+                    IHSession Other = SelectedFile as Segment;
+
+                    foreach (Collection item in Other.Collections)
                     {
-                        Collection NewCollection = New.Collections.Add(Sub.ObjType);
-                        NewCollection.Title = Sub.Title;
-                    }
-                    foreach (Meme Meme in Collection.Memes)
-                    {
-                        Meme NewMeme = New.Memes.Add(Meme.ObjType);
-                        NewMeme.Title = Meme.Title;
-                        NewMeme.Creator = Meme.Creator;
-                        NewMeme.Description = Meme.Description;
-                        if (Meme.ObjType == MemeTypes.Attachment)
+                        Collection New = Current.Collections.Add(item.Type);
+                        New.Title = item.Title;
+                        New.Creator = item.Creator;
+                        New.Description = item.Description;
+
+                        if (item.Type == CollectionTypes.Master)
                         {
-                            NewMeme.Attachments = Meme.Attachments;
-                        }
-                        else if (Meme.ObjType == MemeTypes.Script)
-                        {
-                            foreach (Script Script in Meme.Scripts)
+                            foreach (Collection sub in item.Collections)
                             {
-                                Script NewScript = Meme.Scripts.Add();
-                                NewScript.Person = Script.Person;
-                                NewScript.Position = Script.Position;
-                                NewScript.Text = Script.Text;
+                                Collection thing = New.Collections.Add(sub.Type);
+                                thing.Title = sub.Title;
+                                thing.Creator = sub.Creator;
+                                thing.Description = sub.Description;
                             }
                         }
                     }
+                    break;
                 }
-                foreach (Meme Meme in SelectedSes.FavoriteMemes)
-                {
-                    Meme NewMeme = File.FavoriteMemes.Add(Meme.ObjType);
-                    NewMeme.Title = Meme.Title;
-                    NewMeme.Creator = Meme.Creator;
-                    NewMeme.Description = Meme.Description;
-                    if (Meme.ObjType == MemeTypes.Attachment)
-                    {
-                        NewMeme.Attachments = Meme.Attachments;
-                    }
-                    else if (Meme.ObjType == MemeTypes.Script)
-                    {
-                        foreach (Script Script in Meme.Scripts)
-                        {
-                            Script NewScript = Meme.Scripts.Add();
-                            NewScript.Person = Script.Person;
-                            NewScript.Position = Script.Position;
-                            NewScript.Text = Script.Text;
-                        }
-                    }
-                }
-                foreach (Meme Meme in SelectedSes.LegendaryMemes)
-                {
-                    Meme NewMeme = File.LegendaryMemes.Add(Meme.ObjType);
-                    NewMeme.Title = Meme.Title;
-                    NewMeme.Creator = Meme.Creator;
-                    NewMeme.Description = Meme.Description;
-                    if (Meme.ObjType == MemeTypes.Attachment)
-                    {
-                        NewMeme.Attachments = Meme.Attachments;
-                    }
-                    else if (Meme.ObjType == MemeTypes.Script)
-                    {
-                        foreach (Script Script in Meme.Scripts)
-                        {
-                            Script NewScript = Meme.Scripts.Add();
-                            NewScript.Person = Script.Person;
-                            NewScript.Position = Script.Position;
-                            NewScript.Text = Script.Text;
-                        }
-                    }
-                }
-            }
-            else if (imMemes.IsChecked == true)
-            {
-                Session File = new Session();
 
-                foreach (Meme Meme in SelectedSes.FavoriteMemes)
-                {
-                    Meme NewMeme = File.FavoriteMemes.Add(Meme.ObjType);
-                    NewMeme.Title = Meme.Title;
-                    NewMeme.Creator = Meme.Creator;
-                    NewMeme.Description = Meme.Description;
-                    if (Meme.ObjType == MemeTypes.Attachment)
-                    {
-                        NewMeme.Attachments = Meme.Attachments;
-                    }
-                    else if (Meme.ObjType == MemeTypes.Script)
-                    {
-                        foreach (Script Script in Meme.Scripts)
-                        {
-                            Script NewScript = Meme.Scripts.Add();
-                            NewScript.Person = Script.Person;
-                            NewScript.Position = Script.Position;
-                            NewScript.Text = Script.Text;
-                        }
-                    }
-                }
-                foreach (Meme Meme in SelectedSes.LegendaryMemes)
-                {
-                    Meme NewMeme = File.LegendaryMemes.Add(Meme.ObjType);
-                    NewMeme.Title = Meme.Title;
-                    NewMeme.Creator = Meme.Creator;
-                    NewMeme.Description = Meme.Description;
-                    if (Meme.ObjType == MemeTypes.Attachment)
-                    {
-                        NewMeme.Attachments = Meme.Attachments;
-                    }
-                    else if (Meme.ObjType == MemeTypes.Script)
-                    {
-                        foreach (Script Script in Meme.Scripts)
-                        {
-                            Script NewScript = Meme.Scripts.Add();
-                            NewScript.Person = Script.Person;
-                            NewScript.Position = Script.Position;
-                            NewScript.Text = Script.Text;
-                        }
-                    }
-                }
             }
-            else if (imCollections.IsChecked == true)
-            {
-                Session File = new Session();
-
-                foreach (Collection Collection in SelectedSes.Collections)
-                {
-                    Collection New = File.Collections.Add(Collection.ObjType);
-                    New.Title = Collection.Title;
-                    foreach (Meme Meme in Collection.Memes)
-                    {
-                        Meme NewMeme = New.Memes.Add(Meme.ObjType);
-                        NewMeme.Title = Meme.Title;
-                        NewMeme.Creator = Meme.Creator;
-                        NewMeme.Description = Meme.Description;
-                        if (Meme.ObjType == MemeTypes.Attachment)
-                        {
-                            NewMeme.Attachments = Meme.Attachments;
-                        }
-                        else if (Meme.ObjType == MemeTypes.Script)
-                        {
-                            foreach (Script Script in Meme.Scripts)
-                            {
-                                Script NewScript = Meme.Scripts.Add();
-                                NewScript.Person = Script.Person;
-                                NewScript.Position = Script.Position;
-                                NewScript.Text = Script.Text;
-                            }
-                        }
-                    }
-                }
-                foreach (MasterCollection Collection in SelectedSes.MasterCollections)
-                {
-                    MasterCollection New = File.MasterCollections.Add();
-                    New.Title = Collection.Title;
-                    foreach (Collection Sub in Collection.Collections)
-                    {
-                        Collection NewCollection = New.Collections.Add(Sub.ObjType);
-                        NewCollection.Title = Sub.Title;
-                    }
-                    foreach (Meme Meme in Collection.Memes)
-                    {
-                        Meme NewMeme = New.Memes.Add(Meme.ObjType);
-                        NewMeme.Title = Meme.Title;
-                        NewMeme.Creator = Meme.Creator;
-                        NewMeme.Description = Meme.Description;
-                        if (Meme.ObjType == MemeTypes.Attachment)
-                        {
-                            NewMeme.Attachments = Meme.Attachments;
-                        }
-                        else if (Meme.ObjType == MemeTypes.Script)
-                        {
-                            foreach (Script Script in Meme.Scripts)
-                            {
-                                Script NewScript = Meme.Scripts.Add();
-                                NewScript.Person = Script.Person;
-                                NewScript.Position = Script.Position;
-                                NewScript.Text = Script.Text;
-                            }
-                        }
-                    }
-                }
-            }
-            else if (imCollectionsEXMeme.IsChecked == true)
-            {
-                Session File = new Session();
-
-                foreach (Collection Collection in SelectedSes.Collections)
-                {
-                    Collection New = File.Collections.Add(Collection.ObjType);
-                    New.Title = Collection.Title;
-                }
-                foreach (MasterCollection Collection in SelectedSes.MasterCollections)
-                {
-                    MasterCollection New = File.MasterCollections.Add();
-                    New.Title = Collection.Title;
-                    foreach (Collection Sub in Collection.Collections)
-                    {
-                        Collection NewCollection = New.Collections.Add(Sub.ObjType);
-                        NewCollection.Title = Sub.Title;
-                    }
-                }
-            }
-
-            this.Close();
         }
         private void Cancel_Click(object sender, RoutedEventArgs e) //Closes the window.
         {

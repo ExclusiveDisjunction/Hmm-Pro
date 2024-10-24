@@ -1,10 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using System.Collections.Generic;
 
-using HmPro.Scripting;
-using HmPro.Scripting.Files;
-using HmPro.Scripting.Events;
-using Lyseria;
+using HmPro.Files;
+using HmPro.Events;
+using Phosphor;
+using Phosphor.Registries;
 
 namespace HmPro.Windows
 {
@@ -13,7 +14,9 @@ namespace HmPro.Windows
     /// </summary>
     public partial class Main : Window
     {
-        public Main() //Loads the class and connects the events for saving, appending, and Autosave.Tick.
+        KeyboardRegistry KeyReg = null;
+
+        public Main() //Loads the class and connects the events for saving, appending, and keyboard action
         {
             InitializeComponent();
 
@@ -23,162 +26,106 @@ namespace HmPro.Windows
 
             Ins.Loaded += Ins_Loaded;
             Ins.Unloaded += Ins_Unloaded;
-        }
 
-        #region WindowEvents
+            List<KeyboardShortcut> Shortcuts = new List<KeyboardShortcut>()
+            {
+                new KeyboardShortcut(Key.O, true, false, false, Open_Shortcut), //Open File
+                new KeyboardShortcut(Key.N, true, false, false, NewFile_Shortcut), //New File
+
+                new KeyboardShortcut(new Key[2] { Key.C, Key.S}, true, false, false, SaveACopy_Shortcut), //Save a copy
+                new KeyboardShortcut(Key.S, true, false, false, SaveAs_Shortcut), //Save As
+
+                new KeyboardShortcut(Key.W, true, true, false, CloseEditor_Shortcut), //Close Editor
+                new KeyboardShortcut(Key.W, true, false, false, CloseFile_Shortcut), //Close File
+                
+                new KeyboardShortcut(Key.A, true, true, false, AppendAll_Shortcut), //Append All
+                new KeyboardShortcut(Key.A, true, false, false, Append_Shortcut), //Append
+
+                new KeyboardShortcut(Key.S, false, false, true, Settings_Shortcut), //Settings
+                new KeyboardShortcut(Key.E, false, false, true, Export_Shortcut), //Export
+                new KeyboardShortcut(Key.I, false, false, true, Import_Shortcut), //Import
+                new KeyboardShortcut(Key.C, false, false, true, ConvertFile_Shortcut) //Convert File
+            };
+
+            KeyReg = new KeyboardRegistry(Shortcuts, this);
+        }
+        ~Main() //Releases the events from the current window.
+        {
+            App.Saved -= Window_Saved;
+            App.Appended -= Window_Appened;
+            Ins.Loaded -= Ins_Loaded;
+            Ins.Unloaded -= Ins_Unloaded;
+
+            KeyReg?.Release();
+        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e) //Sets the WindowState of the window to Ins.LastState (set in shutdown), and sets up the welcome screen if Ins.ShowWelcome.
         {
-            if (Ins.LastState == WindowState.Minimized)
-            {
-                this.WindowState = WindowState.Normal;
-            }
-            else
-            {
-                this.WindowState = Ins.LastState;
-            }
+            this.WindowState = Ins.LastState == WindowState.Minimized ? WindowState.Normal : Ins.LastState; //Sets the windows visual state to the last one to be set. If it is minimized, it sets it to normal.
 
+            HideAllEditors();
+            ResetActions();
             Lock();
             if (Ins.IsLoaded)
             {
-                WelcomeGrid.Visibility = Visibility.Collapsed;
                 Information.Visibility = Visibility.Collapsed;
                 UnLock();
 
                 LoadEditor(Editors.CurrentFile);
                 ProgressText.Text = "Ready";
             }
-            else if (Ins.ShowWelcome)
-            {
-                WelcomeGrid.Visibility = Visibility.Visible;
-                ShowWelcome.IsChecked = Ins.ShowWelcome;
-
-                if (Ins.GetRecent(RecentOptions.Rec1) != null)
-                {
-                    Recent1.Visibility = Visibility.Visible;
-                    Session1.Content = Ins.RecentName(RecentOptions.Rec1);
-                    Session1Path.Content = Ins.GetRecent(RecentOptions.Rec1);
-                }
-                else
-                {
-                    Recent1.Visibility = Visibility.Hidden;
-                }
-
-                if (Ins.GetRecent(RecentOptions.Rec2) != null)
-                {
-                    Recent2.Visibility = Visibility.Visible;
-                    Session2.Content = Ins.RecentName(RecentOptions.Rec2);
-                    Session2Path.Content = Ins.GetRecent(RecentOptions.Rec2);
-                }
-                else
-                {
-                    Recent2.Visibility = Visibility.Hidden;
-                }
-
-                if (Ins.GetRecent(RecentOptions.Rec3) != null)
-                {
-                    Recent3.Visibility = Visibility.Visible;
-                    Session3.Content = Ins.RecentName(RecentOptions.Rec3);
-                    Session3Path.Content = Ins.GetRecent(RecentOptions.Rec3);
-                }
-                else
-                {
-                    Recent3.Visibility = Visibility.Hidden;
-                }
-
-                if (Ins.GetRecent(RecentOptions.Rec4) != null)
-                {
-                    Recent4.Visibility = Visibility.Visible;
-                    Session4.Content = Ins.RecentName(RecentOptions.Rec4);
-                    Session4Path.Content = Ins.GetRecent(RecentOptions.Rec4);
-                }
-                else
-                {
-                    Recent4.Visibility = Visibility.Hidden;
-                }
-
-                if (Ins.GetRecent(RecentOptions.Rec5) != null)
-                {
-                    Recent5.Visibility = Visibility.Visible;
-                    Session5.Content = Ins.RecentName(RecentOptions.Rec5);
-                    Session5Path.Content = Ins.GetRecent(RecentOptions.Rec5);
-                }
-                else
-                {
-                    Recent5.Visibility = Visibility.Hidden;
-                }
-            }
             else
             {
-                WelcomeGrid.Visibility = Visibility.Collapsed;
                 Information.Visibility = Visibility.Visible;
                 ProgressText.Text = "Waiting for User Project...";
             }
-
-            HideAllEditors();
-            ResetActions();
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e) //Sets the Ins.LastState (a window state) to this current state, allowing on startup to resize to it.
         {
             App.Appended -= Window_Appened;
             App.Saved -= Window_Saved;
 
+            Ins.Loaded -= Ins_Loaded;
+            Ins.Unloaded -= Ins_Unloaded;
+
             Ins.LastState = this.WindowState;
             Ins.OpenWindows.Remove(this);
 
             CloseAllEditors();
-            foreach (Window thing in Ins.OpenWindows) { thing.Close(); }
-
             App.ExitApp();
         }
-        private void Window_KeyDown(object sender, KeyEventArgs e) //This runs the HmPro.Scripting.Functions.KeyboardCtrl() method, which determines the keyboard's current state and executes the keyboard shortcut.
-        {
-            new Scripting.Functions.KeyboardCtrls(this);
-        }
-
-        #endregion
-        #region AppEvents
 
         private void Window_Saved(object sender, SaveEventArgs e) //This changes the text of the title to show that the file was saved.
         {
-            UpdateTitle(e.Session, false);
+            ProgressText.Text = $"Saved session on {System.DateTime.Now.ToShortDateString()} at {System.DateTime.Now.ToShortTimeString()}"; 
         }
         private void Window_Appened(object sender, AppendEventArgs e) //This changes the text of the title to show that the file was appended, and modifyied. (Adds an * before the file name).
         {
-            UpdateTitle(e.Session, true);
+            ProgressText.Text = $"Appended data on {System.DateTime.Now.ToShortDateString()} at {System.DateTime.Now.ToShortTimeString()}"; 
         }
         private void Ins_Unloaded(object sender, System.EventArgs e) //Shows the information label in the middle of the window.
         {
+            Lock();
             Information.Visibility = Visibility.Visible;
             ProgressText.Text = "Waiting for User Project...";
         }
         private void Ins_Loaded(object sender, System.EventArgs e) //Hides the information label in teh middle of the window.
         {
+            UnLock();
             Information.Visibility = Visibility.Collapsed;
             ProgressText.Text = "Ready";
-        }
 
-        #endregion
-        #region EditorControl
+        }
 
         private void AppendAction(object sender, RoutedEventArgs e) //Used by all appendable editors, this calls the Common.Append(Main, Action) method.
         {
-            Common.Append(CurrentAction);
+            SessionControl.Append(CurrentAction);
         }
         private void CancelJob(object sender, RoutedEventArgs e) //This closes and resets the current editor. This is used by all appendable editors.
         {
             CloseEditor(CurrentAction);
         }
 
-        #endregion
-
-        public void UpdateTitle(Session Session, bool Edited) //Updates the title based off of a session's name and the Edited factor.
-        {
-            string New = Edited ? "*" : ""; //Shows an * when there is an edit in the file. This is set to '*' when appending, and to '' when saved.
-            New += Session.Title;
-
-            this.Title = New;
-        }
         public override string ToString() //Returns the window's title.
         {
             return this.Title;
